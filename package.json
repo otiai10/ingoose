@@ -1,0 +1,10 @@
+{
+    "name": "ingoose",
+    "version": "0.0.1",
+    "description": "Simple IdnexedDB driver for browser application, with mongoose like API.",
+    "dependencies": {},
+    "devDependencies": {
+        "coffee-script": "*",
+        "gulp": "*"
+    }
+}
