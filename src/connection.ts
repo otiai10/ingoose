@@ -8,7 +8,6 @@ module ingoose {
         private openRequest: IDBOpenDBRequest;
         constructor(private dbname: string, private version: number) {}
         public schemas(schemas: Object): PromiseOpened {
-            debugger;
             this.openRequest = indexedDB.open(this.dbname, this.version);
             this.openRequest.onupgradeneeded = (ev: IDBVersionChangeEvent) => {
                 console.log('ここで与えられたschemaについてどうこうする', schemas);
