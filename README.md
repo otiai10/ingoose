@@ -7,7 +7,7 @@ Sample
 ======
 
 ```javascript
-ngoose.connect('database_name');
+ingoose.connect('database_name');
 
 var User = ingoose.model('user', {keyPath: 'id'});
 
