@@ -1,10 +1,24 @@
 {
-    "name": "ingoose",
-    "version": "0.0.1",
-    "description": "Simple IdnexedDB driver for browser application, with mongoose like API.",
-    "dependencies": {},
-    "devDependencies": {
-        "coffee-script": "*",
-        "gulp": "*"
-    }
+  "name": "ingoose",
+  "version": "0.0.1",
+  "description": "Simple IdnexedDB driver for browser application, with mongoose like API.",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/otiai10/ingoose"
+  },
+  "devDependencies": {
+    "coffee-script": "*",
+    "mocha": "*",
+    "chai": "*",
+    "testem": "*",
+    "phantomjs": "*",
+    "gulp": "*",
+    "gulp-concat": "*",
+    "gulp-autowatch": "*",
+    "gulp-typescript": "*"
+  },
+  "scripts": {
+    "test": "gulp test; ./node_modules/testem/testem.js launchers; ./node_modules/testem/testem.js ci"
+  }
 }

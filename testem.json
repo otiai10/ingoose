@@ -1,0 +1,19 @@
+{
+  "framework":"mocha+chai",
+  "before_tests":"gulp test",
+  "src_files":[
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "serve_files":[
+    "build/**/*.js",
+    "test/compiled/**/*.js"
+  ],
+  "launch_in_dev":[
+    "Chrome",
+    "PhantomJS"
+  ],
+  "launch_in_ci":[
+    "PhantomJS"
+  ]
+}
