@@ -9,7 +9,7 @@ gulp.task 'build', () ->
     .pipe concat 'ingoose.min.js'
     .pipe gulp.dest './dest'
 
-gulp.task 'test', () ->
+gulp.task 'test', ['build'], () ->
     gulp.src './test/src/**/*.ts'
     .pipe tsc()
     .pipe gulp.dest './test/compiled'

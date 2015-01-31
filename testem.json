@@ -6,7 +6,7 @@
     "test/**/*.ts"
   ],
   "serve_files":[
-    "build/**/*.js",
+    "dest/ingoose.min.js",
     "test/compiled/**/*.js"
   ],
   "launch_in_dev":[

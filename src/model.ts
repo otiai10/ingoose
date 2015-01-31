@@ -7,7 +7,6 @@ module ingoose {
     export class PromiseModelTx {
         constructor(private cursorRequest: IDBRequest) {}
         public success(cb: (any) => any): PromiseModelTx {
-            // TODO: 生を渡したらおもしろくない.
             this.cursorRequest.onsuccess = cb;
             return this;
         }
@@ -20,7 +19,8 @@ module ingoose {
         constructor(public db: IDBDatabase, private modelName: string) {
         }
         public tx(): IDBTransaction {
-            return this.db.transaction([this.modelName], "readwrite"/* TODO: とりあえずハード */);
+            // TODO: hard "readwrite"
+            return this.db.transaction([this.modelName], "readwrite");
         }
         public objectStore(): IDBObjectStore {
             return this.tx().objectStore(this.modelName);
@@ -33,18 +33,22 @@ module ingoose {
         }
         public save(): PromiseModelTx {
             var store = this.__core.objectStore();
-            var toBeStored = new Object();
+            var toBeStored = {};
             for (var i in this) {
                 if (!this.hasOwnProperty(i)) continue;
-                if (String(i) == '__core') continue;
+                if (String(i) == '__core') continue;// skip __core
                 toBeStored[i] = this[i];
             }
-            console.log('toBeStored', toBeStored);
             var req: IDBRequest = store.put(toBeStored);
-            var promise: PromiseModelTx = new PromiseModelTx(req);
-            return promise;
+            return new PromiseModelTx(req);
         }
     }
+
+    /**
+     * active model of ingoose.
+     * @param modelName Name of this model and storedObject
+     * @param props Properties to be bound on this model
+     */
     export class Model extends _Model {
         public static __name: string;
         constructor(modelName: string, props: any) {
@@ -57,15 +61,22 @@ module ingoose {
             }
         }
     }
+
+    /**
+     * provide extended Model class definition.
+     * @param modelName
+     * @param opt
+     * @returns ModelConstructable
+     */
     export function model(modelName: string, opt: any = {}): any /* ModelConstructable */ {
 
         // clone Model class definition
-        var m = function(props: any = {}) {
-            m['__modelName'] = modelName;
-            Model.call(this, m['__modelName'], props);
+        var ConstructableModel = function(props: any = {}) {
+            ConstructableModel['__modelName'] = modelName;
+            Model.call(this, ConstructableModel['__modelName'], props);
         };
-        m.prototype = Model.prototype;
+        ConstructableModel.prototype = Model.prototype;
 
-        return m;
+        return ConstructableModel;
     }
 }
