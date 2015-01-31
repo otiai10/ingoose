@@ -14,7 +14,7 @@ gulp.task 'test', () ->
     .pipe tsc()
     .pipe gulp.dest './test/compiled'
 
-gulp.task 'watch', (cb) ->
+gulp.task 'watch', ['build'], (cb) ->
     watch gulp,
       build: './src/**/*.ts'
     return cb()
