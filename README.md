@@ -12,16 +12,18 @@ ingoose.connect('database_name');
 var User = ingoose.model('user', {keyPath: 'id'});
 
 var otiai = new User({name: 'otiai10', age: 28, id: 1234});
-otiai.save(function(err) {
-    console.log(err);
+otiai.save().error(function(err) {
+    // error
+}).success(function() {
+    // succeeded
 });
 
-User.find({id:[1000, 2000]}, function(err, users) {
-    console.log(err, users);
+User.find({only: 1234}).success(function(users) {
+    console.log(user);
 });
 
-User.findOne({id: 1234}, function(err, user) {
-    console.log(err, user);
+User.find({min:0, max:2000}).success(function(users) {
+    console.log(users);
 });
 ```
 
@@ -29,5 +31,5 @@ Intall
 ======
 
 ```html
-<script type="text/javascript" src="https://raw.githubusercontent.com/otiai10/ingoose/dest/ingoose.js"></script>
+<script type="text/javascript" src="https://raw.githubusercontent.com/otiai10/ingoose/dest/ingoose.min.js"></script>
 ```

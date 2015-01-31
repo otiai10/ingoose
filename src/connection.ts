@@ -14,14 +14,10 @@ module ingoose {
                 for (var name in schemas) {
                     if (!schemas.hasOwnProperty(name)) continue;
                     if (typeof schemas[name] !== "object") continue;
-                    console.log("_0", name);
                     if (_db.objectStoreNames.contains(name)) {
-                        console.log("_1", name);
                         _db.deleteObjectStore(name);
                     }
-                    console.log("_2", name);
                     _db.createObjectStore(name, schemas[name]);
-                    console.log("_3", name);
                 }
             };
             /*

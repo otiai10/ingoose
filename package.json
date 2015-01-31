@@ -16,7 +16,9 @@
     "gulp": "*",
     "gulp-concat": "*",
     "gulp-autowatch": "*",
-    "gulp-typescript": "*"
+    "gulp-typescript": "*",
+    "gulp-uglify": "*",
+    "gulp-rename": "*"
   },
   "scripts": {
     "test": "gulp test; ./node_modules/testem/testem.js launchers; ./node_modules/testem/testem.js"

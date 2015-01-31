@@ -17,14 +17,10 @@ var ingoose;
                         continue;
                     if (typeof schemas[name] !== "object")
                         continue;
-                    console.log("_0", name);
                     if (ingoose._db.objectStoreNames.contains(name)) {
-                        console.log("_1", name);
                         ingoose._db.deleteObjectStore(name);
                     }
-                    console.log("_2", name);
                     ingoose._db.createObjectStore(name, schemas[name]);
-                    console.log("_3", name);
                 }
             };
             /*
