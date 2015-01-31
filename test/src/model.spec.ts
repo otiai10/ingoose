@@ -62,7 +62,7 @@ module Spec {
             it('should find all objects stored in this namespace', (done) => {
                 var Todo = ingoose.model('todo');
                 Todo.clear().error((err) => {
-                   done(err);
+                    done(err);
                 });
                 Todo.find({min: 0}).success((res) => {
                     res.length.should.equal(0);
@@ -83,30 +83,30 @@ module Spec {
                 });
             });
             describe('when `only` query given', () => {
-               it('should return only one object', (done) => {
-                 var Todo = ingoose.model('todo');
-                Todo.clear().error((err) => {
-                   done(err);
-                });
-                Todo.find({min: 0}).success((res) => {
-                    res.length.should.equal(0);
-                    var todo = new Todo({
-                        text: 'CoffeeScript',
-                        timestamp: 1234
-                    });
-                    todo.save().error((err) => {
+                it('should return only one object', (done) => {
+                    var Todo = ingoose.model('todo');
+                    Todo.clear().error((err) => {
                         done(err);
-                    }).success(() => {
-                        Todo.find({only: 1234}).success((res2) => {
-                            res2.text.should.equal('CoffeeScript');
-                            done();
-                        }).error((err) => {
+                    });
+                    Todo.find({min: 0}).success((res) => {
+                        res.length.should.equal(0);
+                        var todo = new Todo({
+                            text: 'CoffeeScript',
+                            timestamp: 1234
+                        });
+                        todo.save().error((err) => {
                             done(err);
+                        }).success(() => {
+                            Todo.find({only: 1234}).success((res2) => {
+                                res2.text.should.equal('CoffeeScript');
+                                done();
+                            }).error((err) => {
+                                done(err);
+                            });
                         });
                     });
                 });
-               });
             });
-        }) ;
+        });
     });
 }
