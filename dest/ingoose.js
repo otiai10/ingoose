@@ -182,6 +182,11 @@ var ingoose;
             return new PromiseModelTx(req);
             // }
         };
+        _Model.prototype.remove = function (key) {
+            var store = this.__core.objectStore();
+            var request = store.delete(key);
+            return new PromiseModelTx(request);
+        };
         _Model.proxyFind = function (__core, query, facotry) {
             var store = __core.objectStore();
             var range = __core.range(query);

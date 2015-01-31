@@ -59,13 +59,26 @@
                     for (var i in todos) {
                         var tr = document.createElement('tr');
                         var text = document.createElement('td');
-                        text.setAttribute('class', 'col-xs-6');
+                        text.setAttribute('class', 'col-xs-5');
                         text.innerHTML = todos[i].text;
                         var timestamp = document.createElement('td');
-                        timestamp.setAttribute('class', 'col-xs-6');
+                        timestamp.setAttribute('class', 'col-xs-5');
                         timestamp.innerHTML = new Date(todos[i].timestamp).toLocaleString();
+                        var del = document.createElement('td');
+                        del.innerHTML = 'x';
+                        del.addEventListener('click', (function(todo) {
+                            return function() {
+                                todo.remove(todo.timestamp).success(function() {
+                                    Controller.log("deleted successfully");
+                                    Controller.refreshAll();
+                                });
+                            };
+                        })(todos[i]));
+                        del.setAttribute('class', 'col-xs-2');
+                        del.setAttribute('style', 'cursor:pointer');
                         tr.appendChild(text);
                         tr.appendChild(timestamp);
+                        tr.appendChild(del);
                         table.appendChild(tr);
                     }
                     Controller.log(String(todos.length) + " todo found in list");
@@ -88,7 +101,7 @@
             log: function(message) {
                 var display = document.getElementById('debug-log');
                 var prefix = new Date().toString();
-                display.innerHTML += prefix + "\n\t" + message + "\n";
+                display.innerHTML = prefix + "\n\t" + message + "\n" + display.innerHTML;
             }
         };
 

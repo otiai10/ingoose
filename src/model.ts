@@ -102,6 +102,12 @@ module ingoose {
                 return new PromiseModelTx(req);
             // }
         }
+        public remove(key): PromiseModelTx {
+            var store = this.__core.objectStore();
+            var request = store.delete(key);
+            return new PromiseModelTx(request);
+
+        }
         public static proxyFind(__core: HotCore, query: FindQuery, facotry): PromiseFindTx {
             var store = __core.objectStore();
             var range = __core.range(query);

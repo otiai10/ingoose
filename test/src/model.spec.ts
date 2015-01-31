@@ -108,5 +108,32 @@ module Spec {
                 });
             });
         });
+        describe('remove', () => {
+            it('should remove object from storage by key', (done) => {
+                var Todo = ingoose.model('todo');
+                var python = new Todo({text: 'Python', timestamp: 1000});
+                var php = new Todo({text: 'PHP', timestamp: 1010});
+                var ruby = new Todo({text: 'Ruby', timestamp: 1101});
+                python.save().success(() => {
+                    php.save().success(() => {
+                        ruby.save();
+                    });
+                });
+                Todo.find({min: 0}).success((res) => {
+                    res.length.should.not.equal(0);
+                    Todo.find({only: 1010}).success(function (todo) {
+                        todo.should.not.be.a('null');
+                        todo.text.should.equal('PHP');
+                        todo.timestamp.should.equal(1010);
+                        todo.remove(1010).success(function () {
+                            Todo.find({only: 1010}).success(function (todo) {
+                                chai.expect(todo).to.be.undefined;
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+        })
     });
 }
