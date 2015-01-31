@@ -5,10 +5,17 @@ module ingoose {
         new(modelName: string, opt?: any): Model;
     }
     export class PromiseModelTx {
-        constructor(private cursorRequest: IDBRequest, private upperError: Error = null) {
-        }
-        public success(cb: (any) => any): PromiseModelTx {
-            this.cursorRequest.onsuccess = cb;
+        constructor(
+            public cursorRequest: IDBRequest,
+            private onsuccess: (req: IDBRequest, cb: (any) => any) => any = (req, cb: () => any) => {
+              cb();
+            },
+            private upperError: Error = null
+        ) {}
+        public success(cb: (any?) => any): PromiseModelTx {
+            this.cursorRequest.onsuccess = (ev: Event) => {
+                this.onsuccess(this.cursorRequest, cb);
+            };
             return this;
         }
         public error(cb: (err) => any): PromiseModelTx {
@@ -17,6 +24,33 @@ module ingoose {
                 return this;
             }
             this.cursorRequest.onerror = cb;
+            return this;
+        }
+    }
+    export class PromiseFindTx extends PromiseModelTx {
+        constructor(private factory: (any) => any,
+                    private query: FindQuery,
+                    cursorRequest,
+                    onsuccess,
+                    upperError = null) {
+            super(cursorRequest, onsuccess, upperError);
+        }
+        public success(cb: (any?) => any): PromiseFindTx {
+            if (this.query.only !== undefined) {
+                this.cursorRequest.onsuccess = (ev: any) => {
+                    if (!ev.target || !ev.target.result) return cb();
+                    var res = this.factory(ev.target.result.value);
+                    return cb(res);
+                };
+                return this;
+            }
+            var res: any[] = [];
+            this.cursorRequest.onsuccess = (ev:any) => {
+                if (!ev.target || !ev.target.result) return cb(res);
+                var result = ev.target.result;
+                res.push(this.factory(result.value));
+                result.continue();
+            };
             return this;
         }
     }
@@ -30,11 +64,27 @@ module ingoose {
         public objectStore(): IDBObjectStore {
             return this.tx().objectStore(this.modelName);
         }
+        public range(query: FindQuery): IDBKeyRange {
+            return HotCore.range(query);
+        }
+        public static range(query: FindQuery): IDBKeyRange {
+            if (query.only !== undefined) {
+                return IDBKeyRange.only(query.only);
+            }
+            if (query.min == undefined && query.max == undefined) {
+                // TODO
+                throw "This is TODO";
+            } else if (query.min == undefined) {
+                return IDBKeyRange.upperBound(query.max);
+            } else if (query.max == undefined) {
+                return IDBKeyRange.lowerBound(query.min);
+            }
+            return IDBKeyRange.bound(query.min, query.max);
+        }
     }
     class _Model {
-        private __core: HotCore;
-        constructor(db, modelName) {
-            this.__core = new HotCore(db, modelName);
+        constructor(private __core: HotCore) {
+            // this.__core = new HotCore(db, modelName);
         }
         public save(): PromiseModelTx {
             var store = this.__core.objectStore();
@@ -49,8 +99,22 @@ module ingoose {
                 var req:IDBRequest = store.put(toBeStored);
             //    return new PromiseModelTx(req);
             // } catch (err) {
-                return new PromiseModelTx(req, null);
+                return new PromiseModelTx(req);
             // }
+        }
+        public static proxyFind(__core: HotCore, query: FindQuery, facotry): PromiseFindTx {
+            var store = __core.objectStore();
+            var range = __core.range(query);
+            var request = store.openCursor(range);
+            var onsuccess = (req: IDBRequest, cb) => {
+                cb();
+            };
+            return new PromiseFindTx(facotry, query, request, onsuccess);
+        }
+        public static proxyClear(__core: HotCore): PromiseModelTx {
+            var store = __core.objectStore();
+            var request = store.clear();
+            return new PromiseModelTx(request);
         }
     }
 
@@ -63,15 +127,13 @@ module ingoose {
         public static __name: string;
         constructor(modelName: string, props: any) {
             // bind inner connected db
-            super(_db, modelName);
+            var __core = new HotCore(_db, modelName);
+            super(__core);
             for (var i in props) {
                 if (props.hasOwnProperty(i)) {
                     this[i] = props[i];
                 }
             }
-        }
-        public static findAll() {
-            console.log("findAll!!");
         }
     }
 
@@ -84,12 +146,30 @@ module ingoose {
     export function model(modelName: string, opt: any = {}): any /* ModelConstructable */ {
 
         // clone Model class definition
-        var ConstructableModel = function(props: any = {}) {
-            ConstructableModel['__modelName'] = modelName;
-            Model.call(this, ConstructableModel['__modelName'], props);
+        var ConstructableModel: any = function(props: any = {}) {
+           Model.call(this, ConstructableModel['__modelName'], props);
         };
+        ConstructableModel.__modelName = modelName;
         ConstructableModel.prototype = Model.prototype;
+        ConstructableModel.__core = new HotCore(_db, ConstructableModel.__modelName);
+        ConstructableModel.find = (query: FindQuery): PromiseFindTx => {
+            return Model.proxyFind(ConstructableModel.__core, query, function(props) {
+               return new ConstructableModel(props);
+            });
+        };
+        ConstructableModel.clear = (): PromiseModelTx => {
+            return Model.proxyClear(ConstructableModel.__core);
+        };
 
         return ConstructableModel;
+    }
+
+    /**
+     *
+     */
+    export interface FindQuery {
+        only?: any;
+        min?: any;
+        max?: any;
     }
 }

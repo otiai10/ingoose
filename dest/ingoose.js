@@ -72,13 +72,20 @@ var __extends = this.__extends || function (d, b) {
 var ingoose;
 (function (ingoose) {
     var PromiseModelTx = (function () {
-        function PromiseModelTx(cursorRequest, upperError) {
+        function PromiseModelTx(cursorRequest, onsuccess, upperError) {
+            if (onsuccess === void 0) { onsuccess = function (req, cb) {
+                cb();
+            }; }
             if (upperError === void 0) { upperError = null; }
             this.cursorRequest = cursorRequest;
+            this.onsuccess = onsuccess;
             this.upperError = upperError;
         }
         PromiseModelTx.prototype.success = function (cb) {
-            this.cursorRequest.onsuccess = cb;
+            var _this = this;
+            this.cursorRequest.onsuccess = function (ev) {
+                _this.onsuccess(_this.cursorRequest, cb);
+            };
             return this;
         };
         PromiseModelTx.prototype.error = function (cb) {
@@ -92,6 +99,38 @@ var ingoose;
         return PromiseModelTx;
     })();
     ingoose.PromiseModelTx = PromiseModelTx;
+    var PromiseFindTx = (function (_super) {
+        __extends(PromiseFindTx, _super);
+        function PromiseFindTx(factory, query, cursorRequest, onsuccess, upperError) {
+            if (upperError === void 0) { upperError = null; }
+            _super.call(this, cursorRequest, onsuccess, upperError);
+            this.factory = factory;
+            this.query = query;
+        }
+        PromiseFindTx.prototype.success = function (cb) {
+            var _this = this;
+            if (this.query.only !== undefined) {
+                this.cursorRequest.onsuccess = function (ev) {
+                    if (!ev.target || !ev.target.result)
+                        return cb();
+                    var res = _this.factory(ev.target.result.value);
+                    return cb(res);
+                };
+                return this;
+            }
+            var res = [];
+            this.cursorRequest.onsuccess = function (ev) {
+                if (!ev.target || !ev.target.result)
+                    return cb(res);
+                var result = ev.target.result;
+                res.push(_this.factory(result.value));
+                result.continue();
+            };
+            return this;
+        };
+        return PromiseFindTx;
+    })(PromiseModelTx);
+    ingoose.PromiseFindTx = PromiseFindTx;
     var HotCore = (function () {
         function HotCore(db, modelName) {
             this.db = db;
@@ -104,11 +143,30 @@ var ingoose;
         HotCore.prototype.objectStore = function () {
             return this.tx().objectStore(this.modelName);
         };
+        HotCore.prototype.range = function (query) {
+            return HotCore.range(query);
+        };
+        HotCore.range = function (query) {
+            if (query.only !== undefined) {
+                return IDBKeyRange.only(query.only);
+            }
+            if (query.min == undefined && query.max == undefined) {
+                throw "This is TODO";
+            }
+            else if (query.min == undefined) {
+                return IDBKeyRange.upperBound(query.max);
+            }
+            else if (query.max == undefined) {
+                return IDBKeyRange.lowerBound(query.min);
+            }
+            return IDBKeyRange.bound(query.min, query.max);
+        };
         return HotCore;
     })();
     var _Model = (function () {
-        function _Model(db, modelName) {
-            this.__core = new HotCore(db, modelName);
+        function _Model(__core) {
+            this.__core = __core;
+            // this.__core = new HotCore(db, modelName);
         }
         _Model.prototype.save = function () {
             var store = this.__core.objectStore();
@@ -125,8 +183,22 @@ var ingoose;
             var req = store.put(toBeStored);
             //    return new PromiseModelTx(req);
             // } catch (err) {
-            return new PromiseModelTx(req, null);
+            return new PromiseModelTx(req);
             // }
+        };
+        _Model.proxyFind = function (__core, query, facotry) {
+            var store = __core.objectStore();
+            var range = __core.range(query);
+            var request = store.openCursor(range);
+            var onsuccess = function (req, cb) {
+                cb();
+            };
+            return new PromiseFindTx(facotry, query, request, onsuccess);
+        };
+        _Model.proxyClear = function (__core) {
+            var store = __core.objectStore();
+            var request = store.clear();
+            return new PromiseModelTx(request);
         };
         return _Model;
     })();
@@ -139,16 +211,14 @@ var ingoose;
         __extends(Model, _super);
         function Model(modelName, props) {
             // bind inner connected db
-            _super.call(this, ingoose._db, modelName);
+            var __core = new HotCore(ingoose._db, modelName);
+            _super.call(this, __core);
             for (var i in props) {
                 if (props.hasOwnProperty(i)) {
                     this[i] = props[i];
                 }
             }
         }
-        Model.findAll = function () {
-            console.log("findAll!!");
-        };
         return Model;
     })(_Model);
     ingoose.Model = Model;
@@ -163,10 +233,19 @@ var ingoose;
         // clone Model class definition
         var ConstructableModel = function (props) {
             if (props === void 0) { props = {}; }
-            ConstructableModel['__modelName'] = modelName;
             Model.call(this, ConstructableModel['__modelName'], props);
         };
+        ConstructableModel.__modelName = modelName;
         ConstructableModel.prototype = Model.prototype;
+        ConstructableModel.__core = new HotCore(ingoose._db, ConstructableModel.__modelName);
+        ConstructableModel.find = function (query) {
+            return Model.proxyFind(ConstructableModel.__core, query, function (props) {
+                return new ConstructableModel(props);
+            });
+        };
+        ConstructableModel.clear = function () {
+            return Model.proxyClear(ConstructableModel.__core);
+        };
         return ConstructableModel;
     }
     ingoose.model = model;

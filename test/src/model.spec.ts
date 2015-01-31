@@ -5,9 +5,12 @@ module Spec {
     chai.should();
 
     before((done) => {
-        ingoose.connect('ingoose_test_testem', 1).schemas({
+        ingoose.connect('ingoose_test_testem', 3).schemas({
             'user': {
                 keyPath: 'age'
+            },
+            'todo': {
+                keyPath: 'timestamp'
             }
         }).error((err) => {
             throw err;
@@ -55,9 +58,54 @@ module Spec {
             //     });
             // });
         });
-        describe('findAll', () => {
-            it('should find all objects stored in this namespace', () => {
-                var User = ingoose.model('user');
+        describe('find', () => {
+            it('should find all objects stored in this namespace', (done) => {
+                var Todo = ingoose.model('todo');
+                Todo.clear().error((err) => {
+                   done(err);
+                });
+                Todo.find({min: 0}).success((res) => {
+                    res.length.should.equal(0);
+                    var todo = new Todo({
+                        text: 'JavaScript',
+                        timestamp: Date.now()
+                    });
+                    todo.save().error((err) => {
+                        done(err);
+                    }).success(() => {
+                        Todo.find({min:0, max: Date.now() + 100}).success((res2) => {
+                            res2.length.should.equal(1);
+                            done();
+                        }).error((err) => {
+                            done(err);
+                        });
+                    });
+                });
+            });
+            describe('when `only` query given', () => {
+               it('should return only one object', (done) => {
+                 var Todo = ingoose.model('todo');
+                Todo.clear().error((err) => {
+                   done(err);
+                });
+                Todo.find({min: 0}).success((res) => {
+                    res.length.should.equal(0);
+                    var todo = new Todo({
+                        text: 'CoffeeScript',
+                        timestamp: 1234
+                    });
+                    todo.save().error((err) => {
+                        done(err);
+                    }).success(() => {
+                        Todo.find({only: 1234}).success((res2) => {
+                            res2.text.should.equal('CoffeeScript');
+                            done();
+                        }).error((err) => {
+                            done(err);
+                        });
+                    });
+                });
+               });
             });
         }) ;
     });
