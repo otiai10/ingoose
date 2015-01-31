@@ -5,12 +5,17 @@ module ingoose {
         new(modelName: string, opt?: any): Model;
     }
     export class PromiseModelTx {
-        constructor(private cursorRequest: IDBRequest) {}
+        constructor(private cursorRequest: IDBRequest, private upperError: Error = null) {
+        }
         public success(cb: (any) => any): PromiseModelTx {
             this.cursorRequest.onsuccess = cb;
             return this;
         }
         public error(cb: (err) => any): PromiseModelTx {
+            if (!!this.cursorRequest == false) {
+                cb(this.upperError);
+                return this;
+            }
             this.cursorRequest.onerror = cb;
             return this;
         }
@@ -39,8 +44,13 @@ module ingoose {
                 if (String(i) == '__core') continue;// skip __core
                 toBeStored[i] = this[i];
             }
-            var req: IDBRequest = store.put(toBeStored);
-            return new PromiseModelTx(req);
+            // TODO #1
+            // try {
+                var req:IDBRequest = store.put(toBeStored);
+            //    return new PromiseModelTx(req);
+            // } catch (err) {
+                return new PromiseModelTx(req, null);
+            // }
         }
     }
 
@@ -59,6 +69,9 @@ module ingoose {
                     this[i] = props[i];
                 }
             }
+        }
+        public static findAll() {
+            console.log("findAll!!");
         }
     }
 

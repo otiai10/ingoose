@@ -29,5 +29,5 @@ Intall
 ======
 
 ```html
-<script type="text/javascript" src="https://raw.githubusercontent.com/otiai10/ingoose/dest/ingoose.min.js"></script>
+<script type="text/javascript" src="https://raw.githubusercontent.com/otiai10/ingoose/dest/ingoose.js"></script>
 ```

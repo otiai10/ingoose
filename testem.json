@@ -6,14 +6,10 @@
     "test/**/*.ts"
   ],
   "serve_files":[
-    "dest/ingoose.min.js",
+    "dest/ingoose.js",
     "test/compiled/**/*.js"
   ],
   "launch_in_dev":[
-    "Chrome",
-    "PhantomJS"
-  ],
-  "launch_in_ci":[
-    "PhantomJS"
+    "Chrome"
   ]
 }

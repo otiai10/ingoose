@@ -6,14 +6,8 @@ module ingoose {
         name: string;
     }
     export class PromiseOpened {
-        private openRequest: IDBOpenDBRequest;
-        constructor(private dbname: string, private version: number) {}
-        private defaultOnSuccessListener(ev: Event) {
-            _db = this.openRequest.result;
-            console.log("openRequestは成功してる");
-        }
-        public schemas(schemas: Object[]): PromiseOpened {
-            this.openRequest = indexedDB.open(this.dbname, this.version);
+        constructor(private openRequest: IDBOpenDBRequest) {}
+        public schemas(schemas: Object): PromiseOpened {
             this.openRequest.onupgradeneeded = (ev: IDBVersionChangeEvent) => {
                 _db = ev.target['result'];
                 ev.target['transaction'].onerror = (err) => { throw new Error("xxx00: " + err.toString())};
@@ -30,7 +24,12 @@ module ingoose {
                     console.log("_3", name);
                 }
             };
-            this.openRequest.onsuccess = this.defaultOnSuccessListener;
+            /*
+            this.openRequest.onsuccess = () => {
+                _db = this.openRequest.result;
+                afterAll();
+            };
+            */
             return this;
         }
         public error(onerror: (Error) => any = () => {}): PromiseOpened {
@@ -40,13 +39,14 @@ module ingoose {
         public success(onsuccess: () => any = () => {}): PromiseOpened {
             // overwrite onsuccess
             this.openRequest.onsuccess = (ev: Event) => {
-                this.defaultOnSuccessListener(ev);
+                _db = this.openRequest.result;
                 onsuccess()
             };
             return this;
         }
     }
     export function connect(dbname: string, version: number): PromiseOpened {
-        return new PromiseOpened(dbname, version);
+        var openRequest = indexedDB.open(dbname, version);
+        return new PromiseOpened(openRequest);
     }
 }

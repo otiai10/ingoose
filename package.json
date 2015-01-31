@@ -19,6 +19,6 @@
     "gulp-typescript": "*"
   },
   "scripts": {
-    "test": "gulp test; ./node_modules/testem/testem.js launchers; ./node_modules/testem/testem.js ci"
+    "test": "gulp test; ./node_modules/testem/testem.js launchers; ./node_modules/testem/testem.js"
   }
 }

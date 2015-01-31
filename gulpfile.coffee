@@ -6,7 +6,7 @@ watch  = require 'gulp-autowatch'
 gulp.task 'build', () ->
     gulp.src './src/**/*.ts'
     .pipe tsc()
-    .pipe concat 'ingoose.min.js'
+    .pipe concat 'ingoose.js'
     .pipe gulp.dest './dest'
 
 gulp.task 'test', ['build'], () ->

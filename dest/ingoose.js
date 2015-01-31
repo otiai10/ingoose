@@ -3,16 +3,10 @@ var ingoose;
     // TODO: exportしたくない（同module内で有効なprivateスコープってどうやるの？）
     ingoose._db;
     var PromiseOpened = (function () {
-        function PromiseOpened(dbname, version) {
-            this.dbname = dbname;
-            this.version = version;
+        function PromiseOpened(openRequest) {
+            this.openRequest = openRequest;
         }
-        PromiseOpened.prototype.defaultOnSuccessListener = function (ev) {
-            ingoose._db = this.openRequest.result;
-            console.log("openRequestは成功してる");
-        };
         PromiseOpened.prototype.schemas = function (schemas) {
-            this.openRequest = indexedDB.open(this.dbname, this.version);
             this.openRequest.onupgradeneeded = function (ev) {
                 ingoose._db = ev.target['result'];
                 ev.target['transaction'].onerror = function (err) {
@@ -33,7 +27,12 @@ var ingoose;
                     console.log("_3", name);
                 }
             };
-            this.openRequest.onsuccess = this.defaultOnSuccessListener;
+            /*
+            this.openRequest.onsuccess = () => {
+                _db = this.openRequest.result;
+                afterAll();
+            };
+            */
             return this;
         };
         PromiseOpened.prototype.error = function (onerror) {
@@ -48,7 +47,7 @@ var ingoose;
             }; }
             // overwrite onsuccess
             this.openRequest.onsuccess = function (ev) {
-                _this.defaultOnSuccessListener(ev);
+                ingoose._db = _this.openRequest.result;
                 onsuccess();
             };
             return this;
@@ -57,7 +56,8 @@ var ingoose;
     })();
     ingoose.PromiseOpened = PromiseOpened;
     function connect(dbname, version) {
-        return new PromiseOpened(dbname, version);
+        var openRequest = indexedDB.open(dbname, version);
+        return new PromiseOpened(openRequest);
     }
     ingoose.connect = connect;
 })(ingoose || (ingoose = {}));
@@ -72,14 +72,20 @@ var __extends = this.__extends || function (d, b) {
 var ingoose;
 (function (ingoose) {
     var PromiseModelTx = (function () {
-        function PromiseModelTx(cursorRequest) {
+        function PromiseModelTx(cursorRequest, upperError) {
+            if (upperError === void 0) { upperError = null; }
             this.cursorRequest = cursorRequest;
+            this.upperError = upperError;
         }
         PromiseModelTx.prototype.success = function (cb) {
             this.cursorRequest.onsuccess = cb;
             return this;
         };
         PromiseModelTx.prototype.error = function (cb) {
+            if (!!this.cursorRequest == false) {
+                cb(this.upperError);
+                return this;
+            }
             this.cursorRequest.onerror = cb;
             return this;
         };
@@ -114,8 +120,13 @@ var ingoose;
                     continue; // skip __core
                 toBeStored[i] = this[i];
             }
+            // TODO #1
+            // try {
             var req = store.put(toBeStored);
-            return new PromiseModelTx(req);
+            //    return new PromiseModelTx(req);
+            // } catch (err) {
+            return new PromiseModelTx(req, null);
+            // }
         };
         return _Model;
     })();
@@ -135,6 +146,9 @@ var ingoose;
                 }
             }
         }
+        Model.findAll = function () {
+            console.log("findAll!!");
+        };
         return Model;
     })(_Model);
     ingoose.Model = Model;
