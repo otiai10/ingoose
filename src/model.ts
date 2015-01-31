@@ -55,7 +55,7 @@ module ingoose {
         }
     }
     class HotCore {
-        constructor(public db: IDBDatabase, private modelName: string) {
+        constructor(public db: IDBDatabase, public modelName: string) {
         }
         public tx(): IDBTransaction {
             // TODO: hard "readwrite"
@@ -102,8 +102,10 @@ module ingoose {
                 return new PromiseModelTx(req);
             // }
         }
-        public remove(key): PromiseModelTx {
+        public remove(): PromiseModelTx {
             var store = this.__core.objectStore();
+            // TODO: exception
+            var key = this[keyOf(this.__core.modelName)];
             var request = store.delete(key);
             return new PromiseModelTx(request);
 
@@ -151,9 +153,14 @@ module ingoose {
      */
     export function model(modelName: string, opt: any = {}): any /* ModelConstructable */ {
 
+        if (!_schemaRegistry[modelName]) return errorUnregisteredModel(modelName);
+
         // clone Model class definition
         var ConstructableModel: any = function(props: any = {}) {
-           Model.call(this, ConstructableModel['__modelName'], props);
+            if (props[keyOf(ConstructableModel.__modelName)] == undefined) {
+                return errorMissingRequiredProperty(keyOf(ConstructableModel.__modelName), "keyPath");
+            }
+            Model.call(this, ConstructableModel['__modelName'], props);
         };
         ConstructableModel.__modelName = modelName;
         ConstructableModel.prototype = Model.prototype;
@@ -177,5 +184,12 @@ module ingoose {
         only?: any;
         min?: any;
         max?: any;
+    }
+
+    function errorUnregisteredModel(modelName: string) {
+        throw new Error("Unregistered model `" + modelName + "`");
+    }
+    function errorMissingRequiredProperty(propName: string, reason: string) {
+        throw new Error("Missing required property `" + propName + "` (" + reason + ")");
     }
 }

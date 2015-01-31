@@ -1,26 +1,36 @@
 var ingoose;
 (function (ingoose) {
-    // TODO: exportしたくない（同module内で有効なprivateスコープってどうやるの？）
+    // TODO: #2 exportしたくない（同module内で有効なprivateスコープってどうやるの？）
     ingoose._db;
+    // TODO: #2
+    ingoose._schemaRegistry = {};
+    function keyOf(name) {
+        // TODO: exception
+        return ingoose._schemaRegistry[name].keyPath;
+    }
+    ingoose.keyOf = keyOf;
     var PromiseOpened = (function () {
         function PromiseOpened(openRequest) {
             this.openRequest = openRequest;
         }
         PromiseOpened.prototype.schemas = function (schemas) {
+            for (var name in schemas) {
+                if (!schemas.hasOwnProperty(name))
+                    continue;
+                if (typeof schemas[name] !== "object")
+                    continue;
+                ingoose._schemaRegistry[name] = schemas[name];
+            }
             this.openRequest.onupgradeneeded = function (ev) {
                 ingoose._db = ev.target['result'];
                 ev.target['transaction'].onerror = function (err) {
                     throw new Error("xxx00: " + err.toString());
                 };
-                for (var name in schemas) {
-                    if (!schemas.hasOwnProperty(name))
-                        continue;
-                    if (typeof schemas[name] !== "object")
-                        continue;
+                for (var name in ingoose._schemaRegistry) {
                     if (ingoose._db.objectStoreNames.contains(name)) {
                         ingoose._db.deleteObjectStore(name);
                     }
-                    ingoose._db.createObjectStore(name, schemas[name]);
+                    ingoose._db.createObjectStore(name, ingoose._schemaRegistry[name]);
                 }
             };
             /*
@@ -182,8 +192,10 @@ var ingoose;
             return new PromiseModelTx(req);
             // }
         };
-        _Model.prototype.remove = function (key) {
+        _Model.prototype.remove = function () {
             var store = this.__core.objectStore();
+            // TODO: exception
+            var key = this[ingoose.keyOf(this.__core.modelName)];
             var request = store.delete(key);
             return new PromiseModelTx(request);
         };
@@ -231,9 +243,14 @@ var ingoose;
      */
     function model(modelName, opt) {
         if (opt === void 0) { opt = {}; }
+        if (!ingoose._schemaRegistry[modelName])
+            return errorUnregisteredModel(modelName);
         // clone Model class definition
         var ConstructableModel = function (props) {
             if (props === void 0) { props = {}; }
+            if (props[ingoose.keyOf(ConstructableModel.__modelName)] == undefined) {
+                return errorMissingRequiredProperty(ingoose.keyOf(ConstructableModel.__modelName), "keyPath");
+            }
             Model.call(this, ConstructableModel['__modelName'], props);
         };
         ConstructableModel.__modelName = modelName;
@@ -250,4 +267,10 @@ var ingoose;
         return ConstructableModel;
     }
     ingoose.model = model;
+    function errorUnregisteredModel(modelName) {
+        throw new Error("Unregistered model `" + modelName + "`");
+    }
+    function errorMissingRequiredProperty(propName, reason) {
+        throw new Error("Missing required property `" + propName + "` (" + reason + ")");
+    }
 })(ingoose || (ingoose = {}));

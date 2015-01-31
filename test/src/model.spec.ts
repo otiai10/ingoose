@@ -5,7 +5,7 @@ module Spec {
     chai.should();
 
     before((done) => {
-        ingoose.connect('ingoose_test_testem', 3).schemas({
+        ingoose.connect('ingoose_test_testem', 4).schemas({
             'user': {
                 keyPath: 'age'
             },
@@ -28,14 +28,15 @@ module Spec {
     describe('ConstructableModel', () => {
         it('should be initialized by `new` keyword', () => {
             var User = ingoose.model('user');
-            var user = new User();
+            var user = new User({age: 100});
             user.save.should.not.be.a('null');
             user.save.should.be.a('function');
         });
         it('should bind properties with `new` keyword', () => {
             var User = ingoose.model('user');
             var user = new User({
-                foo: 'otiai10'
+                foo: 'otiai10',
+                age: 100
             });
             user.foo.should.equal('otiai10');
         });
@@ -125,7 +126,7 @@ module Spec {
                         todo.should.not.be.a('null');
                         todo.text.should.equal('PHP');
                         todo.timestamp.should.equal(1010);
-                        todo.remove(1010).success(function () {
+                        todo.remove().success(function () {
                             Todo.find({only: 1010}).success(function (todo) {
                                 chai.expect(todo).to.be.undefined;
                                 done();
