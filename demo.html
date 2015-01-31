@@ -2,6 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
     <script type="text/javascript" src="./dest/ingoose.js"></script>
     <script type="text/javascript">
         // {{{ prepare
@@ -21,28 +23,112 @@
             }
         };
         // }}}
-        ingoose.connect(db_name, d.getHours() + _v).schemas({
-            'user': {
-                keyPath: 'age'
-            },
+        var version = d.getHours() + _v;
+        ingoose.connect(db_name, version).schemas({
             'todo': {
                 keyPath: 'timestamp'
             }
         }).error(function(err) {
-            window.alert("connect error!\n" + err.toString());
+            var message = "connection failed!!\n\t" + err.toString();
+            Controller.log(message)
         }).success(function(res) {
-            var User = ingoose.model('user');
-            var user = new User({
-                name: 'おちあい',
-                age: 28
-            });
-            // user.age = 28;
-            user.save().error(function(err) {
-                window.alert("user.save error!\n" + err.toString());
-            });
+            Controller.log("connected successfully\n\tDB_NAME: " + db_name + ", DB_VERSION: " + version);
+            Controller.refreshAll();
         });
+
+        var Controller = {
+            addTodo: function() {
+                var input = document.getElementById('new-text');
+                var text = input.value;
+                input.value = '';
+                var ts = Date.now();
+                var Todo = ingoose.model('todo');
+                var todo = new Todo({text: text, timestamp: ts});
+                todo.save().success(function(){
+                    Controller.refreshAll();
+                    Controller.log("saved successfully\n\t" + JSON.stringify({text:text, timestamp:ts}));
+                    Controller.focus(input);
+                });
+            },
+            refreshAll: function() {
+                var Todo = ingoose.model('todo');
+                var table = document.getElementById('todo-list');
+                table.innerHTML = '';
+                Todo.find({min:0}).success(function (todos) {
+                    console.log(todos);
+                    for (var i in todos) {
+                        var tr = document.createElement('tr');
+                        var text = document.createElement('td');
+                        text.setAttribute('class', 'col-xs-6');
+                        text.innerHTML = todos[i].text;
+                        var timestamp = document.createElement('td');
+                        timestamp.setAttribute('class', 'col-xs-6');
+                        timestamp.innerHTML = new Date(todos[i].timestamp).toLocaleString();
+                        tr.appendChild(text);
+                        tr.appendChild(timestamp);
+                        table.appendChild(tr);
+                    }
+                    Controller.log(String(todos.length) + " todo found in list");
+                });
+            },
+            clear: function() {
+                var Todo = ingoose.model('todo');
+                Todo.clear().success(function() {
+                    Controller.refreshAll();
+                    Controller.focus();
+                    Controller.log("The list cleared");
+                }).error(function(err) {
+                    Controller.log(err.toString());
+                });
+            },
+            focus: function (input) {
+                input = input || document.getElementById('new-text');
+                input.focus();
+            },
+            log: function(message) {
+                var display = document.getElementById('debug-log');
+                var prefix = new Date().toString();
+                display.innerHTML += prefix + "\n\t" + message + "\n";
+            }
+        };
+
     </script>
 </head>
 <body>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <h1>ingoose demo <a href="https://github.com/otiai10/ingoose"><img src="https://assets-cdn.github.com/favicon.ico" /></a></h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group">
+                                <input type="text" id="new-text" class="form-control" tabindex="1" autofocus="true" placeholder="What to do?"/>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-default" onclick="Controller.addTodo()" tabindex="1">add</button>
+                                <button class="btn btn-default" onclick="Controller.clear()" tabindex="1">clear</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <table id="todo-list" class="table table-striped">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <pre id="debug-log" class="small"></pre>
+        </div>
+    </div>
+</div>
 </body>
 </html>
