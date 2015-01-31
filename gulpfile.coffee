@@ -21,7 +21,7 @@ gulp.task 'watch', ['build'], (cb) ->
       build: './src/**/*.ts'
     return cb()
 
-gulp.task 'uglify', () ->
+gulp.task 'release', ['build'], () ->
     gulp.src './dest/ingoose.js'
     .pipe uglify
         mangle: false
