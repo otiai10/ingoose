@@ -3,6 +3,11 @@ ingoose
 
 Simple [IdnexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) driver for browser application, with [mongoose](http://mongoosejs.com/) like API.
 
+Demo
+=======
+
+http://otiai10.github.io/ingoose/demo.html
+
 Sample
 ======
 
