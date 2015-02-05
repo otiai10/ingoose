@@ -275,7 +275,7 @@ var ingoose;
         // clone Model class definition
         var ConstructableModel = function (props) {
             if (props === void 0) { props = {}; }
-            if (props[ingoose.SchemaRegistry.keyOf(ConstructableModel.__modelName)] == undefined) {
+            if (props[ingoose.SchemaRegistry.keyOf(ConstructableModel.__modelName)] == undefined && !ingoose.SchemaRegistry.get(ConstructableModel.__modelName).autoIncrement) {
                 return errorMissingRequiredProperty(ingoose.SchemaRegistry.keyOf(ConstructableModel.__modelName), "keyPath");
             }
             Model.call(this, ConstructableModel['__modelName'], props);

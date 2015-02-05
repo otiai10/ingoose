@@ -28,7 +28,8 @@
         var version = d.getHours() + _v;
         ingoose.connect(db_name, version).schemas({
             'todo': {
-                keyPath: 'timestamp'
+                keyPath: 'id',
+                autoIncrement: true
             }
         }).error(function(err) {
             var message = "connection failed!!\n\t" + err.toString();
@@ -45,10 +46,10 @@
                 input.value = '';
                 var ts = Date.now();
                 var Todo = ingoose.model('todo');
-                var todo = new Todo({text: text, timestamp: ts});
+                var todo = new Todo({text: text, created: ts});
                 todo.save().success(function(){
                     Controller.refreshAll();
-                    Controller.log("saved successfully\n\t" + JSON.stringify({text:text, timestamp:ts}));
+                    Controller.log("saved successfully\n\t" + JSON.stringify({text:text, created:ts}));
                     Controller.focus(input);
                 });
             },
@@ -56,21 +57,27 @@
                 var Todo = ingoose.model('todo');
                 var table = document.getElementById('todo-list');
                 table.innerHTML = '';
+                var tbody = document.createElement('tbody');
                 Todo.find({min:0}).success(function (todos) {
                     console.log(todos);
                     for (var i in todos) {
                         var tr = document.createElement('tr');
+                        var id = document.createElement('td');
+                        id.setAttribute('class', 'col-xs-2');
+                        id.innerHTML = todos[i].id;
                         var text = document.createElement('td');
-                        text.setAttribute('class', 'col-xs-5');
+                        var text = document.createElement('td');
+                        text.setAttribute('class', 'col-xs-4');
                         text.innerHTML = todos[i].text;
-                        var timestamp = document.createElement('td');
-                        timestamp.setAttribute('class', 'col-xs-5');
-                        timestamp.innerHTML = new Date(todos[i].timestamp).toLocaleString();
+                        var created = document.createElement('td');
+                        created.setAttribute('class', 'col-xs-4');
+                        created.innerHTML = new Date(todos[i].created).toLocaleString();
                         var del = document.createElement('td');
-                        del.innerHTML = 'x';
-                        del.addEventListener('click', (function(todo) {
-                            return function() {
-                                todo.remove(todo.timestamp).success(function() {
+                        del.innerHTML = '<input type="checkbox" />';
+                        del.addEventListener('change', (function(todo) {
+                            return function(ev) {
+                                if (!ev.target.checked) return;
+                                todo.remove().success(function() {
                                     Controller.log("deleted successfully");
                                     Controller.refreshAll();
                                 });
@@ -78,11 +85,13 @@
                         })(todos[i]));
                         del.setAttribute('class', 'col-xs-2');
                         del.setAttribute('style', 'cursor:pointer');
+                        tr.appendChild(id);
                         tr.appendChild(text);
-                        tr.appendChild(timestamp);
+                        tr.appendChild(created);
                         tr.appendChild(del);
-                        table.appendChild(tr);
+                        tbody.appendChild(tr);
                     }
+                    table.appendChild(tbody);
                     Controller.log(String(todos.length) + " todo found in list");
                 });
             },
@@ -133,7 +142,7 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-12">
-                            <table id="todo-list" class="table table-striped">
+                            <table class="table" id="todo-list">
                             </table>
                         </div>
                     </div>
