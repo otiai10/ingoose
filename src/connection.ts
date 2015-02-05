@@ -36,4 +36,7 @@ module ingoose {
         var openRequest = indexedDB.open(dbname, version);
         return new PromiseOpened(openRequest);
     }
+    export function close() {
+        _db.close();
+    }
 }

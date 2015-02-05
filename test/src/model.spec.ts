@@ -4,7 +4,7 @@
 module Spec {
     chai.should();
     var db_name = 'ingoose_test_testem';
-    var db_version = 6;
+    var db_version = 7;
     before((done) => {
         ingoose.connect(db_name, db_version).schemas({
             'user': {
@@ -18,6 +18,14 @@ module Spec {
         }).success(() => {
             done();
         });
+    });
+    after((done) => {
+        // TODO: promise on close
+        ingoose.close();
+        // TODO: ingoose.truncate(db_name);
+        var req = window.indexedDB.deleteDatabase(db_name);
+        req.onsuccess = () => { done(); };
+        req.onerror = (err) => { done(err); };
     });
     describe('model', () => {
         it('should provide Model-like class definition `ConstructableModel`', () => {

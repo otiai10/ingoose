@@ -89,6 +89,10 @@ var ingoose;
         return new PromiseOpened(openRequest);
     }
     ingoose.connect = connect;
+    function close() {
+        ingoose._db.close();
+    }
+    ingoose.close = close;
 })(ingoose || (ingoose = {}));
 
 /// <reference path="./connection.ts" />
