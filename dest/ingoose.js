@@ -44,11 +44,11 @@ var ingoose;
 (function (ingoose) {
     // TODO: #2 exportしたくない（同module内で有効なprivateスコープってどうやるの？）
     ingoose._db;
-    var PromiseOpened = (function () {
-        function PromiseOpened(openRequest) {
+    var PromiseOpen = (function () {
+        function PromiseOpen(openRequest) {
             this.openRequest = openRequest;
         }
-        PromiseOpened.prototype.schemas = function (schemas) {
+        PromiseOpen.prototype.schemas = function (schemas) {
             ingoose.SchemaRegistry.upsertAll(schemas);
             this.openRequest.onupgradeneeded = function (ev) {
                 ingoose._db = ev.target['result'];
@@ -64,13 +64,13 @@ var ingoose;
             };
             return this;
         };
-        PromiseOpened.prototype.error = function (onerror) {
+        PromiseOpen.prototype.error = function (onerror) {
             if (onerror === void 0) { onerror = function () {
             }; }
             this.openRequest.onerror = onerror;
             return this;
         };
-        PromiseOpened.prototype.success = function (onsuccess) {
+        PromiseOpen.prototype.success = function (onsuccess) {
             var _this = this;
             if (onsuccess === void 0) { onsuccess = function () {
             }; }
@@ -81,12 +81,12 @@ var ingoose;
             };
             return this;
         };
-        return PromiseOpened;
+        return PromiseOpen;
     })();
-    ingoose.PromiseOpened = PromiseOpened;
+    ingoose.PromiseOpen = PromiseOpen;
     function connect(dbname, version) {
         var openRequest = indexedDB.open(dbname, version);
-        return new PromiseOpened(openRequest);
+        return new PromiseOpen(openRequest);
     }
     ingoose.connect = connect;
     function close() {

@@ -1,5 +1,9 @@
 // under construction
 declare module ingoose {
+    export function connect(dbName: string, version: number): PromiseOpen;
+    export interface PromiseOpen extends Promise {
+        schema(schemas: Object): Promise;
+    }
     export interface Promise {
         success(cb:(any?) => any): Promise;
         error(cb:(Error?) => any): Promise;
@@ -9,12 +13,19 @@ declare module ingoose {
         min?: any;
         max?: any;
     }
-    export interface Model {
+    export interface IModel {
         new(props: any): Model;
         save(): Promise;
-        find(query: FindQuery): Promise;
+        remove(): Promise;
         clear(): Promise;
-        remove(key: any): Promise;
+        find(query: FindQuery): Promise;
+    }
+    export class Model {
+        new(props: any): Model;
+        save(): Promise;
+        clear(): Promise;
+        remove(): Promise;
+        find(query: FindQuery): Promise;
     }
     export function model(modelName: string): Model;
 }
