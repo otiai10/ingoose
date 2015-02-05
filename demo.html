@@ -64,11 +64,11 @@
                     for (var i in todos) {
                         var tr = document.createElement('tr');
                         var id = document.createElement('td');
-                        id.setAttribute('class', 'col-xs-2');
+                        id.setAttribute('class', 'col-xs-1');
                         id.innerHTML = todos[i].id;
                         var text = document.createElement('td');
                         var text = document.createElement('td');
-                        text.setAttribute('class', 'col-xs-4');
+                        text.setAttribute('class', 'col-xs-6');
                         text.innerHTML = todos[i].text;
                         var created = document.createElement('td');
                         created.setAttribute('class', 'col-xs-4');
@@ -84,7 +84,7 @@
                                 });
                             };
                         })(todos[i]));
-                        del.setAttribute('class', 'col-xs-2');
+                        del.setAttribute('class', 'col-xs-1');
                         tr.appendChild(id);
                         tr.appendChild(text);
                         tr.appendChild(created);
