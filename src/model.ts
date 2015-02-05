@@ -2,8 +2,12 @@
 /// <reference path="./schema.ts" />
 
 module ingoose {
-    export interface ModelConstructable {
-        new(modelName: string, opt?: any): ConstructableModel;
+    export interface IModel {
+        new(props: any): Model;
+        save(): PromiseModelTx;
+        remove(): PromiseModelTx;
+        find(query: FindQuery): PromiseFindTx;
+        clear(): PromiseModelTx;
     }
     export class PromiseModelTx {
         constructor(
@@ -131,7 +135,7 @@ module ingoose {
      * @param modelName Name of this model and storedObject
      * @param props Properties to be bound on this model
      */
-    export class ConstructableModel extends _Model {
+    export class Model extends _Model {
         public static __name: string;
         constructor(modelName: string, props: any) {
             // bind inner connected db
@@ -146,37 +150,37 @@ module ingoose {
     }
 
     /**
-     * provide extended Model class definition.
+     * provide extended ActiveModel class definition.
      * @param modelName
      * @param opt
-     * @returns ModelConstructable
+     * @returns ActiveModel
      */
-    export function model(modelName: string, opt: any = {}): any /* Model */ {
+    export function model(modelName: string, opt: any = {}): IModel {
 
-        if (!SchemaRegistry.get(modelName)) return errorUnregisteredModel(modelName);
+        if (!SchemaRegistry.get(modelName)) errorUnregisteredModel(modelName);
 
-        // clone Model class definition
-        var Model: any = function(props: any = {}) {
-            if (props[SchemaRegistry.keyOf(Model.__modelName)] == undefined
-                && ! SchemaRegistry.get(Model.__modelName).autoIncrement)
+        // clone ActiveModel class definition
+        var ActiveModel: any = function(props: any = {}) {
+            if (props[SchemaRegistry.keyOf(ActiveModel.__modelName)] == undefined
+                && ! SchemaRegistry.get(ActiveModel.__modelName).autoIncrement)
             {
-                return errorMissingRequiredProperty(SchemaRegistry.keyOf(Model.__modelName), 'keyPath');
+                return errorMissingRequiredProperty(SchemaRegistry.keyOf(ActiveModel.__modelName), 'keyPath');
             }
-            ConstructableModel.call(this, Model.__modelName, props);
+            Model.call(this, ActiveModel.__modelName, props);
         };
-        Model.__modelName = modelName;
-        Model.prototype = ConstructableModel.prototype;
-        Model.__core = new HotCore(_db, Model.__modelName);
-        Model.find = (query: FindQuery): PromiseFindTx => {
-            return ConstructableModel.proxyFind(Model.__core, query, function(props) {
-               return new Model(props);
+        ActiveModel.__modelName = modelName;
+        ActiveModel.prototype = Model.prototype;
+        ActiveModel.__core = new HotCore(_db, ActiveModel.__modelName);
+        ActiveModel.find = (query: FindQuery): PromiseFindTx => {
+            return Model.proxyFind(ActiveModel.__core, query, function(props) {
+               return new ActiveModel(props);
             });
         };
-        Model.clear = (): PromiseModelTx => {
-            return ConstructableModel.proxyClear(Model.__core);
+        ActiveModel.clear = (): PromiseModelTx => {
+            return Model.proxyClear(ActiveModel.__core);
         };
 
-        return Model;
+        return ActiveModel;
     }
 
     /**

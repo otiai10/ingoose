@@ -30,7 +30,8 @@ module Spec {
     describe('model', () => {
         it('should provide Model-like class definition `ConstructableModel`', () => {
             var User = ingoose.model('user');
-            (typeof User).should.equal('function');
+            var type: Object = typeof User;
+            type.should.equal('function');
         });
     });
     describe('ConstructableModel', () => {
@@ -46,7 +47,7 @@ module Spec {
                 foo: 'otiai10',
                 age: 100
             });
-            user.foo.should.equal('otiai10');
+            user['foo'].should.equal('otiai10');
         });
     });
     describe('Model', () => {

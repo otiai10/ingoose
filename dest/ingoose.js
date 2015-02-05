@@ -247,9 +247,9 @@ var ingoose;
      * @param modelName Name of this model and storedObject
      * @param props Properties to be bound on this model
      */
-    var ConstructableModel = (function (_super) {
-        __extends(ConstructableModel, _super);
-        function ConstructableModel(modelName, props) {
+    var Model = (function (_super) {
+        __extends(Model, _super);
+        function Model(modelName, props) {
             // bind inner connected db
             var __core = new HotCore(ingoose._db, modelName);
             _super.call(this, __core);
@@ -259,39 +259,39 @@ var ingoose;
                 }
             }
         }
-        return ConstructableModel;
+        return Model;
     })(_Model);
-    ingoose.ConstructableModel = ConstructableModel;
+    ingoose.Model = Model;
     /**
-     * provide extended Model class definition.
+     * provide extended ActiveModel class definition.
      * @param modelName
      * @param opt
-     * @returns ModelConstructable
+     * @returns ActiveModel
      */
     function model(modelName, opt) {
         if (opt === void 0) { opt = {}; }
         if (!ingoose.SchemaRegistry.get(modelName))
-            return errorUnregisteredModel(modelName);
-        // clone Model class definition
-        var Model = function (props) {
+            errorUnregisteredModel(modelName);
+        // clone ActiveModel class definition
+        var ActiveModel = function (props) {
             if (props === void 0) { props = {}; }
-            if (props[ingoose.SchemaRegistry.keyOf(Model.__modelName)] == undefined && !ingoose.SchemaRegistry.get(Model.__modelName).autoIncrement) {
-                return errorMissingRequiredProperty(ingoose.SchemaRegistry.keyOf(Model.__modelName), 'keyPath');
+            if (props[ingoose.SchemaRegistry.keyOf(ActiveModel.__modelName)] == undefined && !ingoose.SchemaRegistry.get(ActiveModel.__modelName).autoIncrement) {
+                return errorMissingRequiredProperty(ingoose.SchemaRegistry.keyOf(ActiveModel.__modelName), 'keyPath');
             }
-            ConstructableModel.call(this, Model.__modelName, props);
+            Model.call(this, ActiveModel.__modelName, props);
         };
-        Model.__modelName = modelName;
-        Model.prototype = ConstructableModel.prototype;
-        Model.__core = new HotCore(ingoose._db, Model.__modelName);
-        Model.find = function (query) {
-            return ConstructableModel.proxyFind(Model.__core, query, function (props) {
-                return new Model(props);
+        ActiveModel.__modelName = modelName;
+        ActiveModel.prototype = Model.prototype;
+        ActiveModel.__core = new HotCore(ingoose._db, ActiveModel.__modelName);
+        ActiveModel.find = function (query) {
+            return Model.proxyFind(ActiveModel.__core, query, function (props) {
+                return new ActiveModel(props);
             });
         };
-        Model.clear = function () {
-            return ConstructableModel.proxyClear(Model.__core);
+        ActiveModel.clear = function () {
+            return Model.proxyClear(ActiveModel.__core);
         };
-        return Model;
+        return ActiveModel;
     }
     ingoose.model = model;
     function errorUnregisteredModel(modelName) {
