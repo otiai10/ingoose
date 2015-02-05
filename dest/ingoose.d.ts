@@ -1,12 +1,11 @@
 // under construction
 declare module ingoose {
-    export function connect(dbName: string, version: number): PromiseOpen;
-    export interface PromiseOpen extends Promise {
-        schema(schemas: Object): Promise;
-    }
     export interface Promise {
         success(cb:(any?) => any): Promise;
         error(cb:(Error?) => any): Promise;
+    }
+    export interface PromiseOpen extends Promise {
+        schema(schemas: Object): Promise;
     }
     export interface FindQuery {
         only?: any;
@@ -28,4 +27,5 @@ declare module ingoose {
         find(query: FindQuery): Promise;
     }
     export function model(modelName: string): Model;
+    export function connect(dbName: string, version: number): PromiseOpen;
 }
