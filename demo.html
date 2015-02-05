@@ -43,6 +43,7 @@
             addTodo: function() {
                 var input = document.getElementById('new-text');
                 var text = input.value;
+                if (!text) return Controller.focus();
                 input.value = '';
                 var ts = Date.now();
                 var Todo = ingoose.model('todo');
@@ -73,7 +74,7 @@
                         created.setAttribute('class', 'col-xs-4');
                         created.innerHTML = new Date(todos[i].created).toLocaleString();
                         var del = document.createElement('td');
-                        del.innerHTML = '<input type="checkbox" />';
+                        del.innerHTML = '<input type="checkbox" style="width:20px;height:20px;cursor:pointer;" />';
                         del.addEventListener('change', (function(todo) {
                             return function(ev) {
                                 if (!ev.target.checked) return;
@@ -84,7 +85,6 @@
                             };
                         })(todos[i]));
                         del.setAttribute('class', 'col-xs-2');
-                        del.setAttribute('style', 'cursor:pointer');
                         tr.appendChild(id);
                         tr.appendChild(text);
                         tr.appendChild(created);
@@ -109,6 +109,9 @@
                 input = input || document.getElementById('new-text');
                 input.focus();
             },
+            keypress: function(ev) {
+                if (ev.keyCode === 13) return Controller.addTodo();
+            },
             log: function(message) {
                 var display = document.getElementById('debug-log');
                 var prefix = new Date().toString();
@@ -132,7 +135,7 @@
                     <div class="row">
                         <div class="col-xs-12">
                             <div class="form-group">
-                                <input type="text" id="new-text" class="form-control" tabindex="1" autofocus="true" placeholder="What to do?"/>
+                                <input type="text" id="new-text" class="form-control" tabindex="1" autofocus="true" placeholder="What to do?" onkeypress="Controller.keypress(event)"/>
                             </div>
                             <div class="form-group">
                                 <button class="btn btn-default" onclick="Controller.addTodo()" tabindex="1">add</button>
