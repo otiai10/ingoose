@@ -13,7 +13,7 @@
         location.search.replace(/^\?/,'').split('&').forEach(function(pair){
             var k_v = pair.split('=');
             if (!k_v || k_v.length < 2) return;
-            if (k_v[0] == 'v') _v = parseInt(k_v[1]);
+            if (k_v[0] == 'v' && k_v[1] == parseInt(k_v[1])) _v = parseInt(k_v[1]);
         });
         var d = new Date();
         var db_name = 'ingoose_test' + d.toLocaleDateString();
@@ -31,8 +31,8 @@
                 keyPath: 'id',
                 autoIncrement: true
             }
-        }).error(function(err) {
-            var message = "connection failed!!\n\t" + err.toString();
+        }).error(function(ev) {
+            var message = "connection failed!!\n\t" + ev.target.error.message;
             Controller.log(message)
         }).success(function(res) {
             Controller.log("connected successfully\n\tDB_NAME: " + db_name + ", DB_VERSION: " + version);

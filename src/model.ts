@@ -3,7 +3,7 @@
 
 module ingoose {
     export interface ModelConstructable {
-        new(modelName: string, opt?: any): Model;
+        new(modelName: string, opt?: any): ConstructableModel;
     }
     export class PromiseModelTx {
         constructor(
@@ -131,7 +131,7 @@ module ingoose {
      * @param modelName Name of this model and storedObject
      * @param props Properties to be bound on this model
      */
-    export class Model extends _Model {
+    export class ConstructableModel extends _Model {
         public static __name: string;
         constructor(modelName: string, props: any) {
             // bind inner connected db
@@ -151,32 +151,32 @@ module ingoose {
      * @param opt
      * @returns ModelConstructable
      */
-    export function model(modelName: string, opt: any = {}): any /* ModelConstructable */ {
+    export function model(modelName: string, opt: any = {}): any /* Model */ {
 
         if (!SchemaRegistry.get(modelName)) return errorUnregisteredModel(modelName);
 
         // clone Model class definition
-        var ConstructableModel: any = function(props: any = {}) {
-            if (props[SchemaRegistry.keyOf(ConstructableModel.__modelName)] == undefined
-                && ! SchemaRegistry.get(ConstructableModel.__modelName).autoIncrement)
+        var Model: any = function(props: any = {}) {
+            if (props[SchemaRegistry.keyOf(Model.__modelName)] == undefined
+                && ! SchemaRegistry.get(Model.__modelName).autoIncrement)
             {
-                return errorMissingRequiredProperty(SchemaRegistry.keyOf(ConstructableModel.__modelName), "keyPath");
+                return errorMissingRequiredProperty(SchemaRegistry.keyOf(Model.__modelName), 'keyPath');
             }
-            Model.call(this, ConstructableModel['__modelName'], props);
+            ConstructableModel.call(this, Model.__modelName, props);
         };
-        ConstructableModel.__modelName = modelName;
-        ConstructableModel.prototype = Model.prototype;
-        ConstructableModel.__core = new HotCore(_db, ConstructableModel.__modelName);
-        ConstructableModel.find = (query: FindQuery): PromiseFindTx => {
-            return Model.proxyFind(ConstructableModel.__core, query, function(props) {
-               return new ConstructableModel(props);
+        Model.__modelName = modelName;
+        Model.prototype = ConstructableModel.prototype;
+        Model.__core = new HotCore(_db, Model.__modelName);
+        Model.find = (query: FindQuery): PromiseFindTx => {
+            return ConstructableModel.proxyFind(Model.__core, query, function(props) {
+               return new Model(props);
             });
         };
-        ConstructableModel.clear = (): PromiseModelTx => {
-            return Model.proxyClear(ConstructableModel.__core);
+        Model.clear = (): PromiseModelTx => {
+            return ConstructableModel.proxyClear(Model.__core);
         };
 
-        return ConstructableModel;
+        return Model;
     }
 
     /**
