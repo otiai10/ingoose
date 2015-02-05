@@ -5,7 +5,7 @@ declare module ingoose {
         error(cb:(Error?) => any): Promise;
     }
     export interface PromiseOpen extends Promise {
-        schema(schemas: Object): Promise;
+        schemas(schemas: Object): Promise;
     }
     export interface FindQuery {
         only?: any;
@@ -20,10 +20,11 @@ declare module ingoose {
         find(query: FindQuery): Promise;
     }
     export class Model {
-        new(props: any): Model;
+        constructor(modelName: string, props: any);
         save(): Promise;
-        clear(): Promise;
         remove(): Promise;
+        static clear(): Promise;
+        static find(query: FindQuery): Promise;
         find(query: FindQuery): Promise;
     }
     export function model(modelName: string): Model;

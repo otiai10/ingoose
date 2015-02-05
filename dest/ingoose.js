@@ -62,6 +62,7 @@ var ingoose;
                     ingoose._db.createObjectStore(name, ingoose.SchemaRegistry.get(name));
                 }
             };
+            this.success();
             return this;
         };
         PromiseOpen.prototype.error = function (onerror) {

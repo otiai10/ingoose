@@ -17,6 +17,7 @@ module ingoose {
                     _db.createObjectStore(name, SchemaRegistry.get(name));
                 }
             };
+            this.success();
             return this;
         }
         public error(onerror: (Error) => any = () => {}): PromiseOpen {
