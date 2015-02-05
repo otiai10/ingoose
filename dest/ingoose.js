@@ -1,44 +1,67 @@
 var ingoose;
 (function (ingoose) {
+    var SchemaRegistry;
+    (function (SchemaRegistry) {
+        var _SchemaRegistry = {};
+        function upsertAll(schemas) {
+            for (var name in schemas) {
+                if (!schemas.hasOwnProperty(name))
+                    continue;
+                if (typeof schemas[name] !== 'object')
+                    continue;
+                if (!validate(schemas[name]))
+                    continue;
+                _SchemaRegistry[name] = schemas[name];
+            }
+        }
+        SchemaRegistry.upsertAll = upsertAll;
+        function validate(schemaLike) {
+            return !!schemaLike['keyPath'];
+        }
+        function all() {
+            return _SchemaRegistry;
+        }
+        SchemaRegistry.all = all;
+        function get(name) {
+            var schema = _SchemaRegistry[name];
+            if (!schema || typeof schema != 'object')
+                return null;
+            return _SchemaRegistry[name];
+        }
+        SchemaRegistry.get = get;
+        function keyOf(name) {
+            var schema = get(name);
+            if (!schema)
+                return "";
+            return schema['keyPath'];
+        }
+        SchemaRegistry.keyOf = keyOf;
+    })(SchemaRegistry = ingoose.SchemaRegistry || (ingoose.SchemaRegistry = {}));
+})(ingoose || (ingoose = {}));
+
+/// <reference path="./schema.ts" />
+var ingoose;
+(function (ingoose) {
     // TODO: #2 exportしたくない（同module内で有効なprivateスコープってどうやるの？）
     ingoose._db;
-    // TODO: #2
-    ingoose._schemaRegistry = {};
-    function keyOf(name) {
-        // TODO: exception
-        return ingoose._schemaRegistry[name].keyPath;
-    }
-    ingoose.keyOf = keyOf;
     var PromiseOpened = (function () {
         function PromiseOpened(openRequest) {
             this.openRequest = openRequest;
         }
         PromiseOpened.prototype.schemas = function (schemas) {
-            for (var name in schemas) {
-                if (!schemas.hasOwnProperty(name))
-                    continue;
-                if (typeof schemas[name] !== "object")
-                    continue;
-                ingoose._schemaRegistry[name] = schemas[name];
-            }
+            ingoose.SchemaRegistry.upsertAll(schemas);
             this.openRequest.onupgradeneeded = function (ev) {
                 ingoose._db = ev.target['result'];
                 ev.target['transaction'].onerror = function (err) {
                     throw new Error("xxx00: " + err.toString());
                 };
-                for (var name in ingoose._schemaRegistry) {
+                for (var name in ingoose.SchemaRegistry.all()) {
                     if (ingoose._db.objectStoreNames.contains(name)) {
                         ingoose._db.deleteObjectStore(name);
                     }
-                    ingoose._db.createObjectStore(name, ingoose._schemaRegistry[name]);
+                    ingoose._db.createObjectStore(name, ingoose.SchemaRegistry.get(name));
                 }
             };
-            /*
-            this.openRequest.onsuccess = () => {
-                _db = this.openRequest.result;
-                afterAll();
-            };
-            */
             return this;
         };
         PromiseOpened.prototype.error = function (onerror) {
@@ -69,6 +92,7 @@ var ingoose;
 })(ingoose || (ingoose = {}));
 
 /// <reference path="./connection.ts" />
+/// <reference path="./schema.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -194,8 +218,7 @@ var ingoose;
         };
         _Model.prototype.remove = function () {
             var store = this.__core.objectStore();
-            // TODO: exception
-            var key = this[ingoose.keyOf(this.__core.modelName)];
+            var key = this[ingoose.SchemaRegistry.keyOf(this.__core.modelName)];
             var request = store.delete(key);
             return new PromiseModelTx(request);
         };
@@ -243,13 +266,13 @@ var ingoose;
      */
     function model(modelName, opt) {
         if (opt === void 0) { opt = {}; }
-        if (!ingoose._schemaRegistry[modelName])
+        if (!ingoose.SchemaRegistry.get(modelName))
             return errorUnregisteredModel(modelName);
         // clone Model class definition
         var ConstructableModel = function (props) {
             if (props === void 0) { props = {}; }
-            if (props[ingoose.keyOf(ConstructableModel.__modelName)] == undefined) {
-                return errorMissingRequiredProperty(ingoose.keyOf(ConstructableModel.__modelName), "keyPath");
+            if (props[ingoose.SchemaRegistry.keyOf(ConstructableModel.__modelName)] == undefined) {
+                return errorMissingRequiredProperty(ingoose.SchemaRegistry.keyOf(ConstructableModel.__modelName), "keyPath");
             }
             Model.call(this, ConstructableModel['__modelName'], props);
         };

@@ -1,4 +1,5 @@
 /// <reference path="./connection.ts" />
+/// <reference path="./schema.ts" />
 
 module ingoose {
     export interface ModelConstructable {
@@ -104,8 +105,7 @@ module ingoose {
         }
         public remove(): PromiseModelTx {
             var store = this.__core.objectStore();
-            // TODO: exception
-            var key = this[keyOf(this.__core.modelName)];
+            var key = this[SchemaRegistry.keyOf(this.__core.modelName)];
             var request = store.delete(key);
             return new PromiseModelTx(request);
 
@@ -153,12 +153,12 @@ module ingoose {
      */
     export function model(modelName: string, opt: any = {}): any /* ModelConstructable */ {
 
-        if (!_schemaRegistry[modelName]) return errorUnregisteredModel(modelName);
+        if (!SchemaRegistry.get(modelName)) return errorUnregisteredModel(modelName);
 
         // clone Model class definition
         var ConstructableModel: any = function(props: any = {}) {
-            if (props[keyOf(ConstructableModel.__modelName)] == undefined) {
-                return errorMissingRequiredProperty(keyOf(ConstructableModel.__modelName), "keyPath");
+            if (props[SchemaRegistry.keyOf(ConstructableModel.__modelName)] == undefined) {
+                return errorMissingRequiredProperty(SchemaRegistry.keyOf(ConstructableModel.__modelName), "keyPath");
             }
             Model.call(this, ConstructableModel['__modelName'], props);
         };

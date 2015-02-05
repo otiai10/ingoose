@@ -3,9 +3,10 @@
 
 module Spec {
     chai.should();
-
+    var db_name = 'ingoose_test_testem';
+    var db_version = 6;
     before((done) => {
-        ingoose.connect('ingoose_test_testem', 4).schemas({
+        ingoose.connect(db_name, db_version).schemas({
             'user': {
                 keyPath: 'age'
             },
@@ -18,7 +19,6 @@ module Spec {
             done();
         });
     });
-
     describe('model', () => {
         it('should provide Model-like class definition `ConstructableModel`', () => {
             var User = ingoose.model('user');
