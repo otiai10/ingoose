@@ -204,6 +204,7 @@ var ingoose;
             // this.__core = new HotCore(db, modelName);
         }
         _Model.prototype.save = function () {
+            var _this = this;
             var store = this.__core.objectStore();
             var toBeStored = {};
             for (var i in this) {
@@ -218,7 +219,13 @@ var ingoose;
             var req = store.put(toBeStored);
             //    return new PromiseModelTx(req);
             // } catch (err) {
-            return new PromiseModelTx(req);
+            return new PromiseModelTx(req, function (req, done) {
+                var schema = ingoose.SchemaRegistry.get(_this.__core.modelName);
+                if (schema.autoIncrement == true) {
+                    _this[schema.keyPath] = req.result;
+                }
+                done(_this);
+            });
             // }
         };
         _Model.prototype.remove = function () {

@@ -12,7 +12,7 @@ module ingoose {
     export class PromiseModelTx {
         constructor(
             public cursorRequest: IDBRequest,
-            private onsuccess: (req: IDBRequest, cb: (any) => any) => any = (req, cb: () => any) => {
+            private onsuccess: (req: IDBRequest, cb: (any?) => any) => any = (req, cb: () => any) => {
               cb();
             },
             private upperError: Error = null
@@ -104,7 +104,13 @@ module ingoose {
                 var req:IDBRequest = store.put(toBeStored);
             //    return new PromiseModelTx(req);
             // } catch (err) {
-                return new PromiseModelTx(req);
+                return new PromiseModelTx(req, (req, done) => {
+                    var schema = SchemaRegistry.get(this.__core.modelName);
+                    if (schema.autoIncrement == true) {
+                        this[schema.keyPath] = req.result;
+                    }
+                    done(this);
+                });
             // }
         }
         public remove(): PromiseModelTx {

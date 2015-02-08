@@ -12,6 +12,10 @@ module Spec {
             },
             'todo': {
                 keyPath: 'timestamp'
+            },
+            order: {
+                keyPath: 'foo_id',
+                autoIncrement: true
             }
         }).error((err) => {
             throw err;
@@ -67,6 +71,21 @@ module Spec {
             //         done(err);
             //     });
             // });
+            context('when model schema contains `autoIncrement:true`', () => {
+                it('should save `this` and increment `keyPath` automatically', (done) => {
+                    var Order = ingoose.model('order');
+                    var order = new Order({username: 'otiai10', timestamp: Date.now()});
+                    order.save().success(() => {
+                        order['foo_id'].should.equal(1);
+                        var id = order['foo_id'];
+                        var another = new Order({username: 'ochiaihiromu', timestamp: Date.now()});
+                        another.save().success(() => {
+                            another['foo_id'].should.equal(id + 1);
+                            done();
+                        });
+                    });
+                });
+            });
         });
         describe('find', () => {
             it('should find all objects stored in this namespace', (done) => {
